@@ -290,27 +290,73 @@ export default async function BusinessPage({ params }: PageProps) {
         </section>
 
         {/* Map */}
-        {(googlePlace?.lat && googlePlace?.lng) || (business.lat && business.lng) ? (
-          <section className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">위치 (Location)</h2>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <p className="text-sm text-gray-700 mb-3">{business.addressRaw}</p>
+        {(() => {
+          const lat = googlePlace?.lat || business.lat;
+          const lng = googlePlace?.lng || business.lng;
+          const mapsUrl = googlePlace?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            `${displayName} ${business.addressRaw}`
+          )}`;
+
+          if (!lat || !lng) {
+            return (
+              <section className="mb-8">
+                <h2 className="text-lg font-semibold mb-4">위치 (Location)</h2>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-sm text-gray-700 mb-3">{business.addressRaw}</p>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(business.addressRaw)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors text-sm text-gray-700"
+                  >
+                    🗺 Google 지도에서 보기
+                  </a>
+                </div>
+              </section>
+            );
+          }
+
+          const apiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+          const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=600x300&scale=2&markers=color:red%7C${lat},${lng}&key=${apiKey}`;
+
+          return (
+            <section className="mb-8">
+              <h2 className="text-lg font-semibold mb-4">위치 (Location)</h2>
               <a
-                href={googlePlace?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  `${displayName} ${business.addressRaw}`
-                )}`}
+                href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors text-sm text-gray-700"
+                className="block overflow-hidden rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
               >
-                <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
-                Google 지도에서 보기
+                {apiKey ? (
+                  <img
+                    src={staticMapUrl}
+                    alt={`${business.nameKo} 위치 지도`}
+                    width={600}
+                    height={300}
+                    className="w-full h-auto"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="bg-gray-100 h-48 flex items-center justify-center text-gray-400 text-sm">
+                    지도를 불러올 수 없습니다
+                  </div>
+                )}
               </a>
-            </div>
-          </section>
-        ) : null}
+              <div className="flex items-center gap-3 mt-3">
+                <p className="text-sm text-gray-600 flex-1">{business.addressRaw}</p>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 inline-flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  🗺 길찾기
+                </a>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Call to Action */}
         <BusinessCTA
