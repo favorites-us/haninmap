@@ -31,7 +31,7 @@ import {
   getIntlRegionNameKo,
   getIntlRegionNameEn,
 } from '@/lib/i18n/countries';
-import { computeOpenNow } from '@/lib/enrichment/helpers';
+import { computeOpenNow, getTodayHours, getFirstPhotoRef } from '@/lib/enrichment/helpers';
 
 const ITEMS_PER_PAGE = 20;
 const BASE_URL = 'https://www.haninmap.com';
@@ -171,6 +171,7 @@ export async function InternationalCategoryPage({
           rating: true,
           userRatingsTotal: true,
           openingHoursJson: true,
+          photosJson: true,
         },
       },
       primaryCategory: true,
@@ -297,6 +298,8 @@ export async function InternationalCategoryPage({
                   categorySlug={business.primaryCategory.slug}
                   categoryNameEn={business.primaryCategory.nameEn}
                   openNow={computeOpenNow(business.googlePlace?.openingHoursJson)}
+                  photoRef={process.env.GOOGLE_MAPS_API_KEY ? getFirstPhotoRef(business.googlePlace?.photosJson) : null}
+                  todayHours={getTodayHours(business.googlePlace?.openingHoursJson)}
                 />
               ))}
             </div>
