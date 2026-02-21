@@ -97,7 +97,7 @@ async function processGuideFile(filePath: string): Promise<void> {
       tags: frontmatter.tags || [],
       seasonStart: frontmatter.seasonStart || null,
       seasonEnd: frontmatter.seasonEnd || null,
-      status: 'draft',
+      // Preserve existing status on update (don't reset to draft)
       updatedAt: new Date(),
     },
     create: {
