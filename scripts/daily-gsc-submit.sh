@@ -8,7 +8,7 @@
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-PROJECT_DIR="/Users/hbrandon/k business directory/korean-directory"
+PROJECT_DIR="/Users/hbrandon/Dev Projects/haninmap"
 OFFSET_FILE="$PROJECT_DIR/.gsc-offset"
 LOG_DIR="$PROJECT_DIR/logs"
 BATCH_SIZE=200
