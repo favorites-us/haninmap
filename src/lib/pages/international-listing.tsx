@@ -13,6 +13,7 @@ import { Pagination } from '@/components/Pagination';
 import { FAQSection, generateCategoryFAQs } from '@/components/FAQSection';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CategoryIntro } from '@/components/CategoryIntro';
+import { RelatedCategories } from '@/components/RelatedCategories';
 import { JsonLd } from '@/components/JsonLd';
 import {
   isPrimaryCategory,
@@ -156,6 +157,15 @@ export async function InternationalCategoryPage({
 
   const totalCount = await prisma.business.count({ where: whereClause });
 
+  // Aggregate rating data for CategoryIntro
+  const ratingAgg = await prisma.googlePlace.aggregate({
+    _avg: { rating: true },
+    _sum: { userRatingsTotal: true },
+    where: {
+      business: whereClause,
+    },
+  });
+
   // 404 for empty categories — prevents noindex pages
   if (totalCount === 0) notFound();
 
@@ -254,13 +264,22 @@ export async function InternationalCategoryPage({
         </header>
 
         {totalCount > 0 && pageNum === 1 && (
-          <CategoryIntro
-            city={city}
-            state={region}
-            categoryNameEn={categoryInfo.nameEn}
-            categoryNameKo={categoryInfo.nameKo}
-            count={totalCount}
-          />
+          <>
+            <CategoryIntro
+              city={city}
+              state={region}
+              categoryNameEn={categoryInfo.nameEn}
+              categoryNameKo={categoryInfo.nameKo}
+              count={totalCount}
+              avgRating={ratingAgg._avg.rating}
+              reviewCount={ratingAgg._sum.userRatingsTotal}
+            />
+            <RelatedCategories
+              currentCategory={categoryInfo.parentSlug || categoryInfo.slug}
+              state={region}
+              city={city}
+            />
+          </>
         )}
 
         <IntlCityFilter

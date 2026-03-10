@@ -129,14 +129,24 @@ export default async function BusinessPage({ params }: PageProps) {
         })
         .filter((ref): ref is string => !!ref)
     : [];
-  // First photo proxy URL for schema image
-  const firstPhotoUrl = photoRefs.length > 0
-    ? `https://www.haninmap.com/api/photo?ref=${encodeURIComponent(photoRefs[0])}&maxwidth=800`
-    : null;
+  // All photo proxy URLs for schema
+  const allPhotoUrls = photoRefs.map(ref =>
+    `https://www.haninmap.com/api/photo?ref=${encodeURIComponent(ref)}&maxwidth=800`
+  );
+  // First photo proxy URL for schema image fallback
+  const firstPhotoUrl = allPhotoUrls.length > 0 ? allPhotoUrls[0] : null;
 
   // Country-aware data
   const countryConfig = getCountryByCode(business.countryCode ?? 'US');
   const isInternational = !!countryConfig;
+
+  // Fetch reviews for schema
+  const reviews = await prisma.review.findMany({
+    where: { businessId: String(business.id), status: 'active' },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+    select: { rating: true, content: true, createdAt: true, user: { select: { name: true } } },
+  });
 
   // Generate JSON-LD: LocalBusiness (enhanced)
   const localBusinessJsonLd = generateLocalBusinessSchema({
@@ -156,9 +166,17 @@ export default async function BusinessPage({ params }: PageProps) {
     reviewCount: googlePlace?.userRatingsTotal,
     slug: business.slug || '',
     imageUrl: firstPhotoUrl,
+    imageUrls: allPhotoUrls.length > 0 ? allPhotoUrls : undefined,
     googleMapsUrl: googlePlace?.googleMapsUrl,
     openingHoursText: googlePlace?.openingHoursText as string[] | null,
     addressCountry: countryConfig?.addressCountry ?? 'US',
+    editorialSummary: googlePlace?.editorialSummary,
+    reviews: reviews.length > 0 ? reviews.map(r => ({
+      rating: r.rating,
+      content: r.content,
+      authorName: r.user.name || undefined,
+      datePublished: r.createdAt.toISOString().split('T')[0],
+    })) : undefined,
   });
 
   const breadcrumbItems = isInternational
@@ -293,10 +311,6 @@ export default async function BusinessPage({ params }: PageProps) {
         {(() => {
           const lat = googlePlace?.lat || business.lat;
           const lng = googlePlace?.lng || business.lng;
-          const mapsUrl = googlePlace?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            `${displayName} ${business.addressRaw}`
-          )}`;
-
           if (!lat || !lng) {
             return (
               <section className="mb-8">
@@ -315,8 +329,6 @@ export default async function BusinessPage({ params }: PageProps) {
               </section>
             );
           }
-
-          const embedQuery = encodeURIComponent(business.addressRaw || `${lat},${lng}`);
 
           return (
             <section className="mb-8">

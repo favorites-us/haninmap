@@ -8,6 +8,7 @@ import { Pagination } from '@/components/Pagination';
 import { FAQSection, generateCategoryFAQs } from '@/components/FAQSection';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CategoryIntro } from '@/components/CategoryIntro';
+import { RelatedCategories } from '@/components/RelatedCategories';
 import { CityFilter } from '@/components/CityFilter';
 import { JsonLd } from '@/components/JsonLd';
 import {
@@ -236,6 +237,15 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
   // Get total count
   const totalCount = await prisma.business.count({ where: whereClause });
+
+  // Aggregate rating data for CategoryIntro
+  const ratingAgg = await prisma.googlePlace.aggregate({
+    _avg: { rating: true },
+    _sum: { userRatingsTotal: true },
+    where: {
+      business: whereClause,
+    },
+  });
 
   // 404 for empty categories — prevents noindex pages
   if (totalCount === 0) notFound();
@@ -484,13 +494,22 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
         {/* Category Intro (unique content block) - only on page 1 */}
         {totalCount > 0 && page === 1 && (
-          <CategoryIntro
-            city={city}
-            state={state}
-            categoryNameEn={categoryInfo.nameEn}
-            categoryNameKo={categoryInfo.nameKo}
-            count={totalCount}
-          />
+          <>
+            <CategoryIntro
+              city={city}
+              state={state}
+              categoryNameEn={categoryInfo.nameEn}
+              categoryNameKo={categoryInfo.nameKo}
+              count={totalCount}
+              avgRating={ratingAgg._avg.rating}
+              reviewCount={ratingAgg._sum.userRatingsTotal}
+            />
+            <RelatedCategories
+              currentCategory={categoryInfo.parentSlug || categoryInfo.slug}
+              state={state}
+              city={city}
+            />
+          </>
         )}
 
         {/* Related Guides */}

@@ -264,7 +264,100 @@ const CATEGORY_SCHEMA_TYPE: Record<string, string> = {
   'home-services': 'HomeAndConstructionBusiness',
   travel: 'TravelAgency',
   shopping: 'Store',
+  // Subcategory types
+  'internal-medicine': 'Physician',
+  'family-medicine': 'Physician',
+  'pediatrics': 'Physician',
+  'dermatology': 'Physician',
+  'psychiatry': 'Physician',
+  'obstetrics-gynecology': 'Physician',
+  'ophthalmology': 'Physician',
+  'orthopedics': 'Physician',
+  'hair-salon': 'HairSalon',
+  'nail-salon': 'NailSalon',
+  'spa': 'DaySpa',
+  'korean-restaurant': 'Restaurant',
+  'chinese-restaurant': 'Restaurant',
+  'japanese-restaurant': 'Restaurant',
+  'bakery-cafe': 'Bakery',
+  'grocery-store': 'GroceryStore',
+  'pharmacy': 'Pharmacy',
+  'accounting': 'AccountingService',
+  'moving': 'MovingCompany',
+  'auto-body-shop': 'AutoBodyShop',
+  'gas-station': 'GasStation',
+  'hotel': 'Hotel',
+  'church': 'Church',
 };
+
+// ─── Opening Hours parser ───────────────────────────────────────────
+
+const DAY_MAP: Record<string, string> = {
+  'Monday': 'Monday',
+  'Tuesday': 'Tuesday',
+  'Wednesday': 'Wednesday',
+  'Thursday': 'Thursday',
+  'Friday': 'Friday',
+  'Saturday': 'Saturday',
+  'Sunday': 'Sunday',
+};
+
+function parseOpeningHoursToSpec(hoursText: string[]): Array<{
+  '@type': string;
+  dayOfWeek: string;
+  opens: string;
+  closes: string;
+}> {
+  const specs: Array<{
+    '@type': string;
+    dayOfWeek: string;
+    opens: string;
+    closes: string;
+  }> = [];
+
+  for (const line of hoursText) {
+    // Format: "Monday: 9:00 AM – 5:00 PM" or "Monday: Closed"
+    const match = line.match(/^(\w+):\s*(.+)$/);
+    if (!match) continue;
+
+    const day = DAY_MAP[match[1]];
+    if (!day) continue;
+
+    const timeStr = match[2].trim();
+    if (timeStr.toLowerCase() === 'closed' || timeStr.toLowerCase() === 'open 24 hours') continue;
+
+    // Parse time range: "9:00 AM – 5:00 PM" or "9:00 AM - 5:00 PM"
+    const timeMatch = timeStr.match(/(\d{1,2}:\d{2}\s*[AP]M)\s*[–-]\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
+    if (!timeMatch) continue;
+
+    const opens = convertTo24Hour(timeMatch[1].trim());
+    const closes = convertTo24Hour(timeMatch[2].trim());
+    if (opens && closes) {
+      specs.push({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: day,
+        opens,
+        closes,
+      });
+    }
+  }
+
+  return specs;
+}
+
+function convertTo24Hour(timeStr: string): string | null {
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return null;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const period = match[3].toUpperCase();
+
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
 
 // ─── JSON-LD: LocalBusiness (enhanced) ─────────────────────────────
 
@@ -285,9 +378,12 @@ export function generateLocalBusinessSchema(business: {
   reviewCount?: number | null;
   slug: string;
   imageUrl?: string | null;
+  imageUrls?: string[] | null;
   googleMapsUrl?: string | null;
   openingHoursText?: string[] | null;
   addressCountry?: string;
+  editorialSummary?: string | null;
+  reviews?: Array<{ rating: number; content: string; authorName?: string; datePublished?: string }> | null;
 }) {
   const schemaType = (business.categorySlug && CATEGORY_SCHEMA_TYPE[business.categorySlug]) || 'LocalBusiness';
   const schema: Record<string, unknown> = {
@@ -318,7 +414,9 @@ export function generateLocalBusinessSchema(business: {
     };
   }
 
-  if (business.imageUrl) {
+  if (business.imageUrls && business.imageUrls.length > 0) {
+    schema.image = business.imageUrls;
+  } else if (business.imageUrl) {
     schema.image = business.imageUrl;
   }
 
@@ -341,9 +439,35 @@ export function generateLocalBusinessSchema(business: {
     };
   }
 
-  // openingHoursSpecification from text (basic)
+  // openingHoursSpecification from text
   if (business.openingHoursText && business.openingHoursText.length > 0) {
+    const specs = parseOpeningHoursToSpec(business.openingHoursText);
+    if (specs.length > 0) {
+      schema.openingHoursSpecification = specs;
+    }
+    // Keep text as fallback
     schema.openingHours = business.openingHoursText;
+  }
+
+  if (business.editorialSummary) {
+    schema.description = business.editorialSummary;
+  }
+
+  if (business.reviews && business.reviews.length > 0) {
+    schema.review = business.reviews.map(r => ({
+      '@type': 'Review',
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: r.rating,
+        bestRating: 5,
+      },
+      reviewBody: r.content,
+      author: {
+        '@type': 'Person',
+        name: r.authorName || 'Anonymous',
+      },
+      ...(r.datePublished && { datePublished: r.datePublished }),
+    }));
   }
 
   return schema;

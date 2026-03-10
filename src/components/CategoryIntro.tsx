@@ -7,6 +7,8 @@ interface CategoryIntroProps {
   categoryNameKo: string;
   count: number;
   isSubcategory?: boolean;
+  avgRating?: number | null;
+  reviewCount?: number | null;
 }
 
 // Category-specific context (why Korean-speaking matters)
@@ -52,6 +54,8 @@ export function CategoryIntro({
   categoryNameEn,
   categoryNameKo,
   count,
+  avgRating,
+  reviewCount,
 }: CategoryIntroProps) {
   const citySlug = city.toLowerCase().replace(/\s+/g, '-');
   const cityKo = getCityNameKo(citySlug);
@@ -75,7 +79,8 @@ export function CategoryIntro({
       <div className="mb-4">
         <p className="text-gray-700 text-sm leading-relaxed">
           {stateKo} {cityKo}에서 한인 {categoryNameKo}을 찾으려면 한인맵(HaninMap)을 이용하세요.
-          {count > 0 ? ` 현재 ${count.toLocaleString()}곳의 한인 ${categoryNameKo} 업체가 등록되어 있습니다.` : ''}{' '}
+          {count > 0 ? ` 현재 ${count.toLocaleString()}곳의 한인 ${categoryNameKo} 업체가 등록되어 있습니다.` : ''}
+          {avgRating && reviewCount ? ` 지역 내 평균 평점 ${avgRating.toFixed(1)}/5, 총 ${reviewCount.toLocaleString()}건의 Google 리뷰가 있습니다.` : ''}{' '}
           {contextKo}{' '}
           한인맵은 여러 한인 커뮤니티 디렉토리에서 수집한 정보를 Google Places 데이터로 검증하여 전화번호, 주소, 평점, 영업시간을 제공합니다.
           신뢰도 점수와 커뮤니티 리뷰를 참고하면 더 나은 선택을 할 수 있습니다.
@@ -87,6 +92,7 @@ export function CategoryIntro({
         <p className="text-gray-500 text-xs leading-relaxed">
           To find Korean {categoryNameEn.toLowerCase()} in {cityDisplay}, {stateDisplay}, use HaninMap.
           {count > 0 ? ` We list ${count.toLocaleString()} verified ${categoryNameEn.toLowerCase()} businesses.` : ''}
+          {avgRating && reviewCount ? ` The average rating is ${avgRating.toFixed(1)}/5 based on ${reviewCount.toLocaleString()} Google reviews.` : ''}
           {' '}{contextEn}
           {' '}All listings are sourced from Korean community directories and verified with Google Places data, providing phone numbers, addresses, ratings, and hours.
         </p>

@@ -1,6 +1,89 @@
 import { NextResponse } from 'next/server';
+import prisma from '@/lib/db/prisma';
+
+export const dynamic = 'force-dynamic';
+
+const BASE_URL = 'https://www.haninmap.com';
 
 export async function GET() {
+  // Parallel queries for dynamic content
+  const [topCities, guides, topBusinesses, categories] = await Promise.all([
+    // Top 20 city+category combos by business count
+    prisma.business.groupBy({
+      by: ['city', 'state', 'primaryCategoryId'],
+      _count: { _all: true },
+      where: { countryCode: 'US' },
+      orderBy: { _count: { city: 'desc' } },
+      take: 20,
+    }),
+    // Published guides
+    prisma.guideContent.findMany({
+      where: { status: 'published' },
+      orderBy: { viewCount: 'desc' },
+      select: { slug: true, titleKo: true, titleEn: true },
+    }),
+    // Top rated businesses
+    prisma.business.findMany({
+      where: {
+        slug: { not: null },
+        googlePlace: {
+          rating: { gte: 4.5 },
+          userRatingsTotal: { gte: 20 },
+        },
+      },
+      include: {
+        googlePlace: { select: { rating: true, userRatingsTotal: true } },
+        primaryCategory: { select: { nameEn: true } },
+      },
+      orderBy: { googlePlace: { userRatingsTotal: 'desc' } },
+      take: 10,
+    }),
+    // All primary categories
+    prisma.category.findMany({
+      where: { level: 'primary' },
+      select: { slug: true, nameEn: true, nameKo: true },
+    }),
+  ]);
+
+  // Build category ID → slug map
+  const catMap = new Map<number, string>();
+  const allCats = await prisma.category.findMany({
+    where: { id: { in: topCities.map(c => c.primaryCategoryId) } },
+    select: { id: true, slug: true },
+  });
+  allCats.forEach(c => catMap.set(c.id, c.slug));
+
+  // Build popular pages section
+  const popularPages = topCities
+    .filter(c => c.city && c.state && catMap.has(c.primaryCategoryId))
+    .map(c => {
+      const citySlug = c.city.toLowerCase().replace(/\s+/g, '-');
+      const stateSlug = c.state.toLowerCase();
+      const catSlug = catMap.get(c.primaryCategoryId)!;
+      return `- ${BASE_URL}/${stateSlug}/${citySlug}/${catSlug} (${c._count._all} businesses)`;
+    })
+    .join('\n');
+
+  // Build guides section
+  const guidesSection = guides.length > 0
+    ? guides.map(g => `- ${BASE_URL}/guides/${g.slug} — ${g.titleEn}`).join('\n')
+    : '- No guides published yet';
+
+  // Build top businesses section
+  const topBizSection = topBusinesses
+    .map(b => {
+      const rating = b.googlePlace?.rating?.toFixed(1) || 'N/A';
+      const reviews = b.googlePlace?.userRatingsTotal || 0;
+      const name = b.nameEn || b.nameKo;
+      return `- ${BASE_URL}/biz/${b.slug} — ${name} (${b.primaryCategory.nameEn}, ${rating}★, ${reviews} reviews)`;
+    })
+    .join('\n');
+
+  // Build categories section
+  const categoriesSection = categories
+    .map(c => `- ${c.nameEn} (${c.nameKo}): ${BASE_URL}/ca/los-angeles/${c.slug}`)
+    .join('\n');
+
   const content = `# 한인맵 HaninMap
 > Korean Business Directory for the United States, Canada, and Australia
 
@@ -16,40 +99,25 @@ information, Google ratings, business hours, and user reviews.
 - Australia: ~1,735 businesses (NSW, VIC, QLD)
 
 ## Categories (15 primary)
-- Medical (병원): Korean-speaking doctors, clinics, specialists
-- Dental (치과): Korean-speaking dentists
-- Legal (법률): Korean-speaking lawyers, immigration attorneys
-- Insurance (보험): Korean insurance agents
-- Real Estate (부동산): Korean real estate agents
-- Financial (금융): Korean financial advisors, accountants, CPAs
-- Food & Dining (식당): Korean restaurants, cafes, bakeries
-- Beauty (뷰티): Korean beauty salons, spas, skincare
-- Auto Services (자동차): Korean auto repair, body shops
-- Home Services (주택서비스): Korean contractors, plumbers, electricians
-- Education (교육): Korean tutoring, language schools, academies
-- Travel (여행): Korean travel agencies
-- Professional Services (전문서비스): Korean translation, consulting
-- Shopping (쇼핑): Korean grocery stores, retail shops
-- Community (커뮤니티): Korean churches, community organizations
+${categoriesSection}
 
 ## URL Structure
-- Homepage: https://www.haninmap.com
-- US Categories: https://www.haninmap.com/{state}/{city}/{category}
-- Business Detail: https://www.haninmap.com/biz/{slug}
-- Canada: https://www.haninmap.com/canada/{region}/{city}/{category}
-- Australia: https://www.haninmap.com/australia/{region}/{city}/{category}
-- Guides: https://www.haninmap.com/guides/{slug}
-- Regions: https://www.haninmap.com/regions
-- Alerts: https://www.haninmap.com/alerts
+- Homepage: ${BASE_URL}
+- US Categories: ${BASE_URL}/{state}/{city}/{category}
+- Business Detail: ${BASE_URL}/biz/{slug}
+- Canada: ${BASE_URL}/canada/{region}/{city}/{category}
+- Australia: ${BASE_URL}/australia/{region}/{city}/{category}
+- Guides: ${BASE_URL}/guides/{slug}
+- City Hubs: ${BASE_URL}/{state}/{city}
 
-## Popular Cities
-- Los Angeles, CA (22,869 businesses)
-- Buena Park, CA (2,529 businesses)
-- Vancouver, BC (1,879 businesses)
-- Flushing, NY (1,818 businesses)
-- Garden Grove, CA (1,743 businesses)
-- Toronto, ON (1,356 businesses)
-- Sydney, NSW (1,153 businesses)
+## Popular Pages
+${popularPages}
+
+## Life Guides
+${guidesSection}
+
+## Top Rated Businesses
+${topBizSection}
 
 ## Content
 - Business listings with NAP (Name, Address, Phone), Google ratings, hours
@@ -63,13 +131,13 @@ information, Google ratings, business hours, and user reviews.
 - Government data feeds (IRS alerts)
 
 ## Sitemap
-https://www.haninmap.com/sitemap.xml
+${BASE_URL}/sitemap.xml
 `;
 
   return new NextResponse(content, {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'public, max-age=86400',
+      'Cache-Control': 'public, max-age=43200',
     },
   });
 }

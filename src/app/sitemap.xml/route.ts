@@ -13,6 +13,7 @@ const BASE_URL = 'https://www.haninmap.com';
 export async function GET() {
   const sitemaps = [
     'sitemap-static.xml',
+    'sitemap-cities.xml',
     'sitemap-us-categories.xml',
     'sitemap-intl-categories.xml',
     'sitemap-businesses.xml',
