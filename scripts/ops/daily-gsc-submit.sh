@@ -75,7 +75,7 @@ echo "Submitting up to $SUBMIT_COUNT URLs from ${FILES[$FILE_IDX]} (offset $LINE
 
 # 제출 실행 — 출력을 캡처하여 실제 성공 수 파싱
 cd "$PROJECT_DIR"
-OUTPUT=$(node --env-file=.env node_modules/.bin/tsx scripts/submit-to-gsc.ts "$BATCH_FILE" --limit="$BATCH_SIZE" 2>&1) || true
+OUTPUT=$(node --env-file=.env node_modules/.bin/tsx scripts/seo/submit-to-gsc.ts "$BATCH_FILE" --limit="$BATCH_SIZE" 2>&1) || true
 
 echo "$OUTPUT" >> "$LOG_FILE"
 

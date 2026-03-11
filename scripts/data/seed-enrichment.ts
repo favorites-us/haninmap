@@ -4,8 +4,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { seedEnrichmentQueue } from '../src/lib/enrichment/queue';
-import { getBudgetStatus } from '../src/lib/enrichment/budget';
+import { seedEnrichmentQueue } from '../../src/lib/enrichment/queue';
+import { getBudgetStatus } from '../../src/lib/enrichment/budget';
 
 const prisma = new PrismaClient();
 

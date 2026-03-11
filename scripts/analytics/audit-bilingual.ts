@@ -6,8 +6,8 @@
  * Run: npm run audit:bilingual or npx tsx scripts/audit-bilingual.ts
  */
 
-import { UI_LABELS, getCityNameKo, formatBilingual } from '../src/lib/i18n/labels';
-import { generateCategoryFAQs } from '../src/components/FAQSection';
+import { UI_LABELS, getCityNameKo, formatBilingual } from '../../src/lib/i18n/labels';
+import { generateCategoryFAQs } from '../../src/components/FAQSection';
 
 interface AuditResult {
   check: string;

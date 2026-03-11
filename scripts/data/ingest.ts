@@ -7,15 +7,15 @@ import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { normalizePhone, parseAddress, generateSlug } from '../src/lib/ingestion/normalize';
-import { mapRadioKoreaCategory, mapKoreaDailyCategory } from '../src/lib/taxonomy/categoryMapping';
-import { getAllCategories } from '../src/lib/taxonomy/categories';
+import { normalizePhone, parseAddress, generateSlug } from '../../src/lib/ingestion/normalize';
+import { mapRadioKoreaCategory, mapKoreaDailyCategory } from '../../src/lib/taxonomy/categoryMapping';
+import { getAllCategories } from '../../src/lib/taxonomy/categories';
 import {
   findPotentialMatch,
   mergeSourceKeys,
   calculateQualityScore,
   SourceKey,
-} from '../src/lib/dedupe/dedupe';
+} from '../../src/lib/dedupe/dedupe';
 
 const prisma = new PrismaClient();
 

@@ -19,7 +19,7 @@ import {
   KOREADAILY_SUB_MAPPING,
   KOREADAILY_CROSS_CATEGORY_FIXES,
   mapRadioKoreaCategory,
-} from '../src/lib/taxonomy/categoryMapping';
+} from '../../src/lib/taxonomy/categoryMapping';
 
 const prisma = new PrismaClient();
 

@@ -9,7 +9,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
-import { KOREADAILY_SUB_MAPPING, mapRadioKoreaCategory } from '../src/lib/taxonomy/categoryMapping';
+import { KOREADAILY_SUB_MAPPING, mapRadioKoreaCategory } from '../../src/lib/taxonomy/categoryMapping';
 
 const prisma = new PrismaClient();
 

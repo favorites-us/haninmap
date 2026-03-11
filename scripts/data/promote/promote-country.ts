@@ -9,14 +9,14 @@
 
 import { PrismaClient } from '@prisma/client';
 import { initCategoryCache, resolveCategory } from './category-resolver';
-import { generateSlug } from '../../src/lib/ingestion/normalize';
+import { generateSlug } from '../../../src/lib/ingestion/normalize';
 import {
   calculateQualityScore,
   namesSimilar,
   addressesSimilar,
   mergeSourceKeys,
   type SourceKey,
-} from '../../src/lib/dedupe/dedupe';
+} from '../../../src/lib/dedupe/dedupe';
 
 const prisma = new PrismaClient();
 
