@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 
+export const dynamic = 'force-dynamic';
+
 const MAX_BYTES = 450_000; // Stop adding before 450KB UTF-8
 
 export async function GET() {

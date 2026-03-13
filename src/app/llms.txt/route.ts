@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 
+export const dynamic = 'force-dynamic';
+
 const BASE_URL = 'https://www.haninmap.com';
 
 export async function GET() {
