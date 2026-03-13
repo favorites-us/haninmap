@@ -34,6 +34,9 @@ Allow: /
 Disallow: /api/
 
 Sitemap: ${BASE_URL}/sitemap.xml
+
+# LLM context
+# See https://www.haninmap.com/llms.txt for site overview
 `;
 
   return new NextResponse(robotsTxt, {

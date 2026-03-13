@@ -40,6 +40,14 @@ const CATEGORY_SPECIFIC_FAQS: Record<string, (cityKo: string) => FAQItem[]> = {
       question: `한국어로 진료 상담이 가능한 의사를 어떻게 찾나요?`,
       answer: `한인맵에서 ${cityKo} 지역의 한인 병원 목록을 확인하세요. 모든 등록 업체는 한국어 상담이 가능하며, 평점과 리뷰를 참고하여 선택할 수 있습니다.`,
     },
+    {
+      question: `${cityKo}에서 보험 없이 갈 수 있는 한인 병원은?`,
+      answer: `한인맵에 등록된 ${cityKo} 한인 병원 중 보험 미가입자도 진료 가능한 곳이 있습니다. 방문 전 전화로 self-pay 가능 여부와 할인 프로그램을 문의하세요.`,
+    },
+    {
+      question: `한인 병원 첫 방문 시 필요한 것은?`,
+      answer: `신분증(ID), 보험카드(있는 경우), 복용 중인 약 목록을 준비하세요. 한인 병원은 한국어로 접수와 상담이 가능하여 첫 방문도 편안합니다.`,
+    },
   ],
   dental: (cityKo) => [
     {
@@ -50,6 +58,14 @@ const CATEGORY_SPECIFIC_FAQS: Record<string, (cityKo: string) => FAQItem[]> = {
       question: `한인 치과에서 보험 처리가 되나요?`,
       answer: `대부분의 한인 치과는 PPO, HMO 등 주요 치과 보험을 취급합니다. 보험 미가입자를 위한 할인 프로그램을 운영하는 치과도 있으니 직접 문의하세요.`,
     },
+    {
+      question: `${cityKo}에서 보험 없이 갈 수 있는 한인 치과는?`,
+      answer: `많은 한인 치과가 보험 없이도 진료를 제공하며, 자체 할인 플랜이나 분할 납부를 지원합니다. 한인맵에서 ${cityKo} 한인 치과를 확인하고 직접 문의하세요.`,
+    },
+    {
+      question: `한인 치과 첫 방문 시 필요한 것은?`,
+      answer: `신분증, 보험카드(있는 경우), 기존 치과 기록(있으면)을 준비하세요. 첫 방문 시 X-ray 촬영과 전반적인 구강 검진이 진행됩니다.`,
+    },
   ],
   legal: (cityKo) => [
     {
@@ -59,6 +75,10 @@ const CATEGORY_SPECIFIC_FAQS: Record<string, (cityKo: string) => FAQItem[]> = {
     {
       question: `이민 관련 법률 상담은 어떤 변호사에게 받아야 하나요?`,
       answer: `이민법 전문 한인 변호사에게 상담하시면 비자, 영주권, 시민권 신청 등의 절차를 한국어로 정확하게 안내받을 수 있습니다. 한인맵에서 전문 분야를 확인하세요.`,
+    },
+    {
+      question: `${cityKo}에서 한국어로 법률 상담을 받으려면?`,
+      answer: `한인맵에서 ${cityKo} 한인 변호사를 전문 분야별로 찾을 수 있습니다. 이민, 사업, 가정법 등 다양한 분야의 한국어 상담 변호사가 등록되어 있습니다.`,
     },
   ],
   food: (cityKo) => [
@@ -211,6 +231,14 @@ export function generateCategoryFAQs(params: {
     {
       question: `한인맵의 업체 정보는 어떻게 검증되나요?`,
       answer: `한인맵은 여러 한인 커뮤니티 디렉토리에서 수집한 정보를 Google Places 데이터로 교차 검증합니다. 전화번호, 주소, 영업시간, 평점이 최신 상태인지 주기적으로 업데이트합니다.`,
+    },
+    {
+      question: `${cityKo} 한인 ${categoryNameKo} 추천 기준은?`,
+      answer: `한인맵은 Google 평점, 리뷰 수, 커뮤니티 추천 빈도, 정보 정확도를 종합한 신뢰도 점수로 업체를 평가합니다. ${count}곳의 ${categoryNameKo} 중 높은 점수의 업체를 우선 확인하세요.`,
+    },
+    {
+      question: `${cityKo}에서 평점이 높은 한인 ${categoryNameKo}는?`,
+      answer: `한인맵에서 ${cityKo} 한인 ${categoryNameKo}를 별점순으로 정렬하면 평점이 높은 업체를 확인할 수 있습니다. Google 리뷰와 커뮤니티 평가를 함께 참고하세요.`,
     },
   ];
 

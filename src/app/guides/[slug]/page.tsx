@@ -7,7 +7,7 @@ import prisma from '@/lib/db/prisma';
 import { FAQSection } from '@/components/FAQSection';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { JsonLd } from '@/components/JsonLd';
-import { buildBreadcrumbList, buildFAQPageSchema } from '@/lib/seo/meta';
+import { buildBreadcrumbList, buildFAQPageSchema, buildSpeakableSpec } from '@/lib/seo/meta';
 import { PRIMARY_CATEGORIES } from '@/lib/taxonomy/categories';
 
 export const revalidate = 86400; // 1 day
@@ -113,6 +113,7 @@ export default async function GuidePage({ params }: PageProps) {
     },
     mainEntityOfPage: `https://www.haninmap.com/guides/${guide.slug}`,
     inLanguage: 'ko',
+    speakable: buildSpeakableSpec(),
   };
 
   // FAQPage schema
@@ -166,7 +167,7 @@ export default async function GuidePage({ params }: PageProps) {
           )}
 
           {/* Summary */}
-          <p className="text-lg text-gray-600">{guide.summary}</p>
+          <p className="text-lg text-gray-600 guide-summary">{guide.summary}</p>
 
           {/* Metadata */}
           <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
@@ -192,7 +193,11 @@ export default async function GuidePage({ params }: PageProps) {
         </article>
 
         {/* FAQs */}
-        {faqs.length > 0 && <FAQSection faqs={faqs} />}
+        {faqs.length > 0 && (
+          <div className="guide-faq">
+            <FAQSection faqs={faqs} />
+          </div>
+        )}
 
         {/* Related Businesses Section */}
         {relatedBusinessStats.length > 0 && (

@@ -239,6 +239,10 @@ export function generateItemListSchema(
     '@type': 'ItemList',
     url: pageUrl,
     numberOfItems: businesses.length,
+    mainEntity: businesses.map((biz) => ({
+      '@type': 'LocalBusiness',
+      '@id': `${BASE_URL}/biz/${biz.slug}`,
+    })),
     itemListElement: businesses.map((biz) => ({
       '@type': 'ListItem',
       position: biz.position,
@@ -407,6 +411,12 @@ export function generateLocalBusinessSchema(business: {
     url: `${BASE_URL}/biz/${business.slug}`,
   };
 
+  // Add areaServed
+  schema.areaServed = {
+    '@type': 'City',
+    name: `${business.city}, ${business.state}`,
+  };
+
   if (business.phone) {
     schema.telephone = business.phone;
   }
@@ -539,4 +549,13 @@ export function buildBusinessBreadcrumbs(params: {
     { name: `${cityKo} (${cityDisplay})`, url: canonicalUrl(state, city, categorySlug) },
     { name: businessName, url: `${BASE_URL}/biz/${businessSlug}` },
   ];
+}
+
+// ─── Speakable specification for Article pages ──────────────────────
+
+export function buildSpeakableSpec() {
+  return {
+    '@type': 'SpeakableSpecification',
+    cssSelector: ['.guide-summary', '.guide-faq'],
+  };
 }

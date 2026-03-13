@@ -9,6 +9,8 @@ interface CategoryIntroProps {
   isSubcategory?: boolean;
   avgRating?: number | null;
   reviewCount?: number | null;
+  topBusinessNames?: string[];
+  subcategories?: string[];
 }
 
 // Category-specific context (why Korean-speaking matters)
@@ -56,6 +58,8 @@ export function CategoryIntro({
   count,
   avgRating,
   reviewCount,
+  topBusinessNames,
+  subcategories,
 }: CategoryIntroProps) {
   const citySlug = city.toLowerCase().replace(/\s+/g, '-');
   const cityKo = getCityNameKo(citySlug);
@@ -81,8 +85,14 @@ export function CategoryIntro({
           {stateKo} {cityKo}에서 한인 {categoryNameKo}을 찾으려면 한인맵(HaninMap)을 이용하세요.
           {count > 0 ? ` 현재 ${count.toLocaleString()}곳의 한인 ${categoryNameKo} 업체가 등록되어 있습니다.` : ''}
           {avgRating && reviewCount ? ` 지역 내 평균 평점 ${avgRating.toFixed(1)}/5, 총 ${reviewCount.toLocaleString()}건의 Google 리뷰가 있습니다.` : ''}{' '}
-          {contextKo}{' '}
-          한인맵은 여러 한인 커뮤니티 디렉토리에서 수집한 정보를 Google Places 데이터로 검증하여 전화번호, 주소, 평점, 영업시간을 제공합니다.
+          {contextKo}
+          {topBusinessNames && topBusinessNames.length > 0 && (
+            <>{' '}평점이 높은 곳으로는 {topBusinessNames.join(', ')} 등이 있습니다.</>
+          )}
+          {subcategories && subcategories.length > 0 && (
+            <>{' '}{subcategories.join(', ')} 등의 전문 분야를 다루고 있습니다.</>
+          )}
+          {' '}한인맵은 여러 한인 커뮤니티 디렉토리에서 수집한 정보를 Google Places 데이터로 검증하여 전화번호, 주소, 평점, 영업시간을 제공합니다.
           신뢰도 점수와 커뮤니티 리뷰를 참고하면 더 나은 선택을 할 수 있습니다.
         </p>
       </div>
@@ -94,6 +104,12 @@ export function CategoryIntro({
           {count > 0 ? ` We list ${count.toLocaleString()} verified ${categoryNameEn.toLowerCase()} businesses.` : ''}
           {avgRating && reviewCount ? ` The average rating is ${avgRating.toFixed(1)}/5 based on ${reviewCount.toLocaleString()} Google reviews.` : ''}
           {' '}{contextEn}
+          {topBusinessNames && topBusinessNames.length > 0 && (
+            <>{' '}Top-rated options include {topBusinessNames.join(', ')}.</>
+          )}
+          {subcategories && subcategories.length > 0 && (
+            <>{' '}Specialties include {subcategories.join(', ')}.</>
+          )}
           {' '}All listings are sourced from Korean community directories and verified with Google Places data, providing phone numbers, addresses, ratings, and hours.
         </p>
       </div>

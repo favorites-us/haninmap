@@ -195,6 +195,31 @@ export async function InternationalCategoryPage({
     take: ITEMS_PER_PAGE,
   });
 
+  // Top 3 businesses by rating for CategoryIntro
+  const topBusinessNames = [...businesses]
+    .filter(b => b.googlePlace?.rating)
+    .sort((a, b) => (b.googlePlace?.rating || 0) - (a.googlePlace?.rating || 0))
+    .slice(0, 3)
+    .map(b => b.nameEn || b.nameKo);
+
+  // Distinct subcategory names for this category
+  const subcategoryNames = categoryInfo.level === 'primary'
+    ? await prisma.category.findMany({
+        where: {
+          parentId: categoryInfo.id,
+          subBusinesses: {
+            some: {
+              countryCode: countryConfig.code,
+              city: isAllCities ? { not: 'Unknown' } : cityNormalized,
+              state: regionNormalized,
+            },
+          },
+        },
+        select: { nameKo: true },
+        take: 5,
+      }).then(cats => cats.map(c => c.nameKo))
+    : [];
+
   const cityDisplay = toTitleCase(city.replace(/-/g, ' '));
   const cityKo = getIntlCityNameKo(city, countrySlug);
   const regionKo = getIntlRegionNameKo(regionNormalized, countrySlug);
@@ -273,6 +298,8 @@ export async function InternationalCategoryPage({
               count={totalCount}
               avgRating={ratingAgg._avg.rating}
               reviewCount={ratingAgg._sum.userRatingsTotal}
+              topBusinessNames={topBusinessNames}
+              subcategories={subcategoryNames}
             />
             <RelatedCategories
               currentCategory={categoryInfo.parentSlug || categoryInfo.slug}

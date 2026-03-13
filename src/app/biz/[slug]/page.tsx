@@ -18,6 +18,7 @@ import { TrackingWrapper } from '@/components/TrackingWrapper';
 import { BusinessVote } from '@/components/BusinessVote';
 import { TrustScoreDetail } from '@/components/TrustScoreDetail';
 import { ReviewSection } from '@/components/ReviewSection';
+import { generateBusinessSummary } from '@/lib/seo/business-summary';
 import { formatBilingual, UI_LABELS } from '@/lib/i18n/labels';
 import { getCountryByCode, getIntlRegionNameEn } from '@/lib/i18n/countries';
 import { computeOpenNow } from '@/lib/enrichment/helpers';
@@ -148,6 +149,17 @@ export default async function BusinessPage({ params }: PageProps) {
     select: { rating: true, content: true, createdAt: true, user: { select: { name: true } } },
   });
 
+  // Auto-generate summary fallback for businesses without Google editorial summary
+  const autoSummary = !googlePlace?.editorialSummary
+    ? generateBusinessSummary({
+        city: business.city,
+        categoryNameKo: business.primaryCategory.nameKo,
+        rating: googlePlace?.rating,
+        reviewCount: googlePlace?.userRatingsTotal,
+        subcategoryNameKo: business.subcategory?.nameKo,
+      })
+    : undefined;
+
   // Generate JSON-LD: LocalBusiness (enhanced)
   const localBusinessJsonLd = generateLocalBusinessSchema({
     name: displayName,
@@ -170,7 +182,7 @@ export default async function BusinessPage({ params }: PageProps) {
     googleMapsUrl: googlePlace?.googleMapsUrl,
     openingHoursText: googlePlace?.openingHoursText as string[] | null,
     addressCountry: countryConfig?.addressCountry ?? 'US',
-    editorialSummary: googlePlace?.editorialSummary,
+    editorialSummary: googlePlace?.editorialSummary || autoSummary,
     reviews: reviews.length > 0 ? reviews.map(r => ({
       rating: r.rating,
       content: r.content,
