@@ -274,7 +274,7 @@ export default async function BusinessPage({ params }: PageProps) {
         </header>
 
         {/* Trust Score Breakdown */}
-        <TrustScoreDetail businessId={String(business.id)} />
+        <TrustScoreDetail businessId={business.id} />
 
         {/* Photo Gallery - proxied through /api/photo to hide API key */}
         {photoRefs.length > 0 && (
@@ -400,6 +400,7 @@ export default async function BusinessPage({ params }: PageProps) {
           categoryId={business.primaryCategoryId}
           city={business.city}
           state={business.state}
+          categoryNameKo={business.primaryCategory.nameKo}
         />
       </main>
     </>
@@ -411,54 +412,155 @@ async function RelatedBusinesses({
   categoryId,
   city,
   state,
+  categoryNameKo,
 }: {
   currentId: number;
   categoryId: number;
   city: string;
   state: string;
+  categoryNameKo: string;
 }) {
-  const related = await prisma.business.findMany({
+  // Step 1: City-scoped query
+  const cityResults = await prisma.business.findMany({
     where: {
-      id: { not: currentId },
       primaryCategoryId: categoryId,
       city,
       state,
+      id: { not: currentId },
+      trustScore: { isNot: null },
     },
     include: {
-      googlePlace: {
-        select: { rating: true, userRatingsTotal: true },
-      },
+      googlePlace: { select: { rating: true, userRatingsTotal: true } },
+      trustScore: { select: { totalScore: true } },
     },
-    orderBy: { qualityScore: 'desc' },
-    take: 4,
+    orderBy: [
+      { trustScore: { totalScore: 'desc' } },
+      { qualityScore: 'desc' },
+      { id: 'asc' },
+    ],
+    take: 10,
   });
 
-  if (related.length === 0) return null;
+  // Step 2: Expand to state if fewer than 10
+  let stateExpanded = false;
+  let stateResults: typeof cityResults = [];
+  if (cityResults.length < 10) {
+    stateExpanded = true;
+    const excludeIds = [currentId, ...cityResults.map((b) => b.id)];
+    stateResults = await prisma.business.findMany({
+      where: {
+        primaryCategoryId: categoryId,
+        state,
+        id: { notIn: excludeIds },
+        trustScore: { isNot: null },
+      },
+      include: {
+        googlePlace: { select: { rating: true, userRatingsTotal: true } },
+        trustScore: { select: { totalScore: true } },
+      },
+      orderBy: [
+        { trustScore: { totalScore: 'desc' } },
+        { qualityScore: 'desc' },
+        { id: 'asc' },
+      ],
+      take: 10 - cityResults.length,
+    });
+  }
+
+  const ranked = [...cityResults, ...stateResults];
+  if (ranked.length === 0) return null;
+
+  // Current business rank (city scope)
+  const currentTrustScore = await prisma.trustScore.findUnique({
+    where: { businessId: currentId },
+    select: { totalScore: true },
+  });
+  let currentRank: number | null = null;
+  if (currentTrustScore) {
+    const higherCount = await prisma.business.count({
+      where: {
+        primaryCategoryId: categoryId,
+        city,
+        state,
+        id: { not: currentId },
+        trustScore: { totalScore: { gt: currentTrustScore.totalScore } },
+      },
+    });
+    currentRank = higherCount + 1;
+  }
+
+  // Title logic
+  const cityDisplay = toTitleCase(city);
+  const stateDisplay = state.toUpperCase();
+  const scope = stateExpanded ? stateDisplay : cityDisplay;
+  const title = `${scope} ${categoryNameKo} TOP 10`;
 
   return (
     <section className="mt-12 border-t border-gray-200 pt-8">
-      <h2 className="text-lg font-semibold mb-4">주변 유사 업체</h2>
-      <div className="grid sm:grid-cols-2 gap-4">
-        {related.map((biz) => (
-          <Link
-            key={biz.id}
-            href={`/biz/${biz.slug}`}
-            className="block p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-          >
-            <h3 className="font-medium text-gray-900">
-              {biz.nameEn || biz.nameKo}
-            </h3>
-            {biz.nameEn && (
-              <p className="text-sm text-gray-500">{biz.nameKo}</p>
-            )}
-            {biz.googlePlace?.rating && (
-              <div className="flex items-center text-sm mt-2">
-                <span className="text-yellow-500 mr-1">★</span>
-                <span>{biz.googlePlace.rating.toFixed(1)}</span>
+      <h2 className="text-lg font-semibold mb-4">{title}</h2>
+
+      {/* Current business rank banner */}
+      <div className="bg-blue-50 text-blue-700 rounded-lg p-3 text-sm mb-4">
+        {currentRank != null
+          ? `현재 업체는 ${cityDisplay}에서 ${currentRank}위입니다`
+          : '이 업체는 아직 순위가 산정되지 않았습니다'}
+      </div>
+
+      {/* Ranked list */}
+      <div className="divide-y divide-gray-100">
+        {ranked.map((biz, idx) => {
+          const rank = idx + 1;
+          const score = biz.trustScore?.totalScore ?? 0;
+          const scoreColor =
+            score >= 80
+              ? 'bg-green-100 text-green-700'
+              : score >= 60
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-gray-100 text-gray-600';
+
+          return (
+            <Link
+              key={biz.id}
+              href={`/biz/${biz.slug}`}
+              className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
+            >
+              {/* Rank number */}
+              <span
+                className={`text-2xl font-bold w-8 text-center shrink-0 ${
+                  rank <= 3 ? 'text-blue-600' : 'text-gray-300'
+                }`}
+              >
+                {rank}
+              </span>
+
+              {/* Business info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-gray-900 truncate">
+                  {biz.nameKo}
+                </h3>
+                {biz.nameEn && (
+                  <p className="text-sm text-gray-500 truncate">{biz.nameEn}</p>
+                )}
+                {biz.googlePlace?.rating && biz.googlePlace.userRatingsTotal && (
+                  <div className="flex items-center text-sm mt-1">
+                    <span className="text-yellow-500 mr-1">★</span>
+                    <span>{biz.googlePlace.rating.toFixed(1)}</span>
+                    <span className="text-gray-400 ml-1">
+                      ({biz.googlePlace.userRatingsTotal}개 리뷰)
+                    </span>
+                  </div>
+                )}
               </div>
-            )}
-          </Link>
-        ))}
+
+              {/* Trust score badge */}
+              <span
+                className={`text-xs font-medium px-2 py-1 rounded shrink-0 ${scoreColor}`}
+              >
+                신뢰 {Math.round(score)}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

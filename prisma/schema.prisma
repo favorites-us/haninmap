@@ -34,9 +34,11 @@ model Business {
   primaryCategory   Category      @relation("PrimaryCategory", fields: [primaryCategoryId], references: [id])
   subcategory       Category?     @relation("Subcategory", fields: [subcategoryId], references: [id])
   googlePlace       GooglePlace?
+  trustScore        TrustScore?
 
   @@index([city, state])
   @@index([primaryCategoryId])
+  @@index([primaryCategoryId, city, state])
   @@index([subcategoryId])
   @@index([dedupeClusterId])
   @@index([phoneE164])
@@ -290,7 +292,7 @@ model CommunityMention {
 // ─── 종합 신뢰점수 ───
 model TrustScore {
   id              Int      @id @default(autoincrement())
-  businessId      String   @unique
+  businessId      Int      @unique
   communityScore  Float    @default(0)
   externalScore   Float    @default(0)
   engagementScore Float    @default(0)
@@ -298,6 +300,7 @@ model TrustScore {
   totalScore      Float    @default(0)
   rank            Int?
   calculatedAt    DateTime @default(now())
+  business        Business @relation(fields: [businessId], references: [id])
 
   @@index([totalScore(sort: Desc)])
 }

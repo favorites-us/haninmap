@@ -87,7 +87,7 @@ async function main() {
   console.log(`Loaded ${businesses.length} businesses.`);
 
   const bizIds = businesses.map((b) => String(b.id));
-  const bizMap = new Map(businesses.map((b) => [String(b.id), b]));
+  const bizMap = new Map(businesses.map((b) => [b.id, b]));
 
   // -----------------------------------------------------------------------
   // 2. Load community mentions
@@ -246,7 +246,7 @@ async function main() {
   // -----------------------------------------------------------------------
 
   interface ScoreRow {
-    businessId: string;
+    businessId: number;
     primaryCategoryId: number;
     communityScore: number;
     externalScore: number;
@@ -336,7 +336,7 @@ async function main() {
     const totalScore = communityScore + externalScore + engagementScore + reviewScore;
 
     scoreRows.push({
-      businessId: bizId,
+      businessId: biz.id,
       primaryCategoryId: biz.primaryCategoryId,
       communityScore: Math.round(communityScore * 100) / 100,
       externalScore: Math.round(externalScore * 100) / 100,
@@ -358,7 +358,7 @@ async function main() {
     byCategory.get(row.primaryCategoryId)!.push(row);
   }
 
-  const rankMap = new Map<string, number>(); // bizId -> rank
+  const rankMap = new Map<number, number>(); // bizId -> rank
   for (const [, rows] of byCategory) {
     rows.sort((a, b) => b.totalScore - a.totalScore);
     rows.forEach((row, idx) => {
