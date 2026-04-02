@@ -298,10 +298,11 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
   // Fetch trust score data for displayed businesses
   const businessIds = businesses.map((b) => String(b.id));
+  const businessIdsNum = businesses.map((b) => b.id);
 
   const [trustScores, mentionAggs, upVoteAggs] = await Promise.all([
     prisma.trustScore.findMany({
-      where: { businessId: { in: businessIds } },
+      where: { businessId: { in: businessIdsNum } },
       select: { businessId: true, totalScore: true },
     }),
     prisma.communityMention.groupBy({
@@ -324,8 +325,8 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   let sortedBusinesses = businesses;
   if (sort === 'trust') {
     sortedBusinesses = [...businesses].sort((a, b) => {
-      const scoreA = trustMap.get(String(a.id)) || 0;
-      const scoreB = trustMap.get(String(b.id)) || 0;
+      const scoreA = trustMap.get(a.id) || 0;
+      const scoreB = trustMap.get(b.id) || 0;
       return scoreB - scoreA;
     });
   }
@@ -499,7 +500,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                   categorySlug={business.primaryCategory.slug}
                   categoryNameEn={business.primaryCategory.nameEn}
                   openNow={computeOpenNow(business.googlePlace?.openingHoursJson)}
-                  trustScore={trustMap.get(String(business.id))}
+                  trustScore={trustMap.get(business.id)}
                   communityMentions={mentionMap.get(String(business.id))}
                   upVotes={upVoteMap.get(String(business.id))}
                   photoRef={process.env.GOOGLE_MAPS_API_KEY ? getFirstPhotoRef(business.googlePlace?.photosJson) : null}

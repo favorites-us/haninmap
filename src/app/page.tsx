@@ -252,7 +252,7 @@ async function TopTrustedBusinesses() {
 
   if (trustScores.length === 0) return null;
 
-  const businessIds = trustScores.map((t) => parseInt(t.businessId, 10)).filter((id) => !isNaN(id));
+  const businessIds = trustScores.map((t) => t.businessId);
 
   const businesses = await prisma.business.findMany({
     where: { id: { in: businessIds } },
@@ -266,7 +266,7 @@ async function TopTrustedBusinesses() {
   });
 
   // Maintain trust score ordering
-  const bizMap = new Map(businesses.map((b) => [String(b.id), b]));
+  const bizMap = new Map(businesses.map((b) => [b.id, b]));
   const scoreMap = new Map(trustScores.map((t) => [t.businessId, t.totalScore]));
   const ordered = trustScores
     .map((t) => bizMap.get(t.businessId))
@@ -281,7 +281,7 @@ async function TopTrustedBusinesses() {
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {ordered.map((biz) => {
-          const score = scoreMap.get(String(biz.id)) || 0;
+          const score = scoreMap.get(biz.id) || 0;
           return (
             <Link
               key={biz.id}
