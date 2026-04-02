@@ -1,7 +1,7 @@
 import prisma from '@/lib/db/prisma';
 
 interface TrustScoreDetailProps {
-  businessId: string;
+  businessId: number;
 }
 
 const SCORE_CATEGORIES = [

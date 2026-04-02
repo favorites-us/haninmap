@@ -274,7 +274,7 @@ export default async function BusinessPage({ params }: PageProps) {
         </header>
 
         {/* Trust Score Breakdown */}
-        <TrustScoreDetail businessId={String(business.id)} />
+        <TrustScoreDetail businessId={business.id} />
 
         {/* Photo Gallery - proxied through /api/photo to hide API key */}
         {photoRefs.length > 0 && (
