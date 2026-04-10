@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import Link from 'next/link';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import { AdSense } from '@/components/ads/AdSense';
 import { MobileNav } from '@/components/MobileNav';
 import { Providers } from './providers';
 import './globals.css';
@@ -43,6 +44,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white min-h-screen`}>
         <GoogleAnalytics />
+        <AdSense />
         <Providers>
           <Header />
           {children}
