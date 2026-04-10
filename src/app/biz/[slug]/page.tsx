@@ -4,6 +4,7 @@ import Link from 'next/link';
 import prisma from '@/lib/db/prisma';
 import { FAQSection, generateBusinessFAQs } from '@/components/FAQSection';
 import { BusinessCTA } from '@/components/BusinessCTA';
+import { HanindocBanner } from '@/components/HanindocBanner';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { JsonLd } from '@/components/JsonLd';
 import {
@@ -381,6 +382,15 @@ export default async function BusinessPage({ params }: PageProps) {
           city={business.city}
           category={business.primaryCategory.nameEn}
         />
+
+        {/* HaninDoc Cross-link */}
+        <div className="mb-8">
+          <HanindocBanner
+            categorySlug={business.primaryCategory.slug}
+            city={business.city}
+            hanindocSlug={business.hanindocSlug}
+          />
+        </div>
 
         <FAQSection faqs={faqs} />
 

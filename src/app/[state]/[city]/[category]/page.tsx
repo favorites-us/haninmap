@@ -10,6 +10,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { CategoryIntro } from '@/components/CategoryIntro';
 import { RelatedCategories } from '@/components/RelatedCategories';
 import { CityFilter } from '@/components/CityFilter';
+import { HanindocBanner } from '@/components/HanindocBanner';
 import { JsonLd } from '@/components/JsonLd';
 import {
   isPrimaryCategory,
@@ -451,6 +452,15 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             <p className="text-gray-600 mt-1 text-sm">{taxonomyDesc}</p>
           )}
         </header>
+
+        {/* HaninDoc Cross-link */}
+        <div className="mb-4">
+          <HanindocBanner
+            categorySlug={category}
+            city={city}
+            categoryNameKo={categoryInfo.nameKo}
+          />
+        </div>
 
         {/* Filters: City → Category → Subcategory */}
         <CityFilter
