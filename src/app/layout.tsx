@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import Link from 'next/link';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
-import { AdSense } from '@/components/ads/AdSense';
 import { MobileNav } from '@/components/MobileNav';
 import { Providers } from './providers';
 import './globals.css';
@@ -42,9 +41,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4866951344575541"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white min-h-screen`}>
         <GoogleAnalytics />
-        <AdSense />
         <Providers>
           <Header />
           {children}
